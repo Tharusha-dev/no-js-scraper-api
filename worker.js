@@ -70,6 +70,11 @@ export default async function ({ html, baseUrl, headers, emailDomains }) {
 
   // console.log(processedLinks.emailLinks);
   
+  // Extract meta information
+  const metaTitle = root.querySelector('title')?.text || '';
+  const metaDescription = root.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+  const metaKeywords = root.querySelector('meta[name="keywords"]')?.getAttribute('content') || '';
+  
   return {
     ...processedLinks,
     scriptTagsPresent,
@@ -77,6 +82,9 @@ export default async function ({ html, baseUrl, headers, emailDomains }) {
     socialLinks: processedLinks.socialLinks,
     emailLinks: processedLinks.emailLinks,
     phoneLinks: processedLinks.phoneLinks,
-    technologies
+    technologies,
+    metaTitle,
+    metaDescription,
+    metaKeywords
   };
 }
