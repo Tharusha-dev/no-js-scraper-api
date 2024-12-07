@@ -48,9 +48,11 @@ const gotInstance = got.extend(
 });
 
 app.addHook('preHandler', async (request, reply) => {
+  
   const authHeader = request.headers['auth'];
+  activeToken = authHeader;
+  
   if (!authHeader || !tokenArray.includes(authHeader)) {
-    activeToken = authHeader;
     reply.status(401).send({
       success: false,
       error: 'Unauthorized. Missing or invalid Auth token.'
@@ -227,6 +229,8 @@ function logger(message) {
     "YXCXW85Hhk8Rx3VIGujakoWQ3jU3ciir" : "2",
     "afLf5pdLaEMoy32OFztqsGP2G5he11c3" : "3"
   }
+
+  // console.log(activeToken);
 
   console.log(`[${activeSession[activeToken]}] => [${Date.now()}] ${message}`);
 }
