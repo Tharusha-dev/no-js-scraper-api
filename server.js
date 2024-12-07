@@ -6,7 +6,15 @@ import cluster from 'cluster';
 import os from 'os';
 import emailDomains from './email-domains.json' with { type: "json" };
 
+// const token = '4ihmWf1YOTQiuUWgkD1aaPCF9QOVJfcM'
+let activeToken;
+
+
+const tokenArray = ["4ihmWf1YOTQiuUWgkD1aaPCF9QOVJfcM","YXCXW85Hhk8Rx3VIGujakoWQ3jU3ciir", "afLf5pdLaEMoy32OFztqsGP2G5he11c3"];
+
 const app = fastify();
+
+
 
 await app.register(import('@fastify/rate-limit'), {
   max: 25,
@@ -16,7 +24,7 @@ await app.register(import('@fastify/rate-limit'), {
 // Create a worker pool for parallel processing - Move this inside the worker condition
 const workerPool = cluster.isPrimary ? null : new Piscina({
   filename: new URL('./worker.js', import.meta.url).pathname,  // Move worker code to separate file
-  minThreads: 5,
+  minThreads: 1,
   maxThreads: 6
 });
 
@@ -31,13 +39,25 @@ const gotInstance = got.extend(
   
   {
     https: { rejectUnauthorized: false },
-    timeout: { request: 8000 },
+    timeout: { request: 65000 },
     retry: {
     limit: 2
   },
   http2: true,
 
 });
+
+app.addHook('preHandler', async (request, reply) => {
+  const authHeader = request.headers['auth'];
+  if (!authHeader || !tokenArray.includes(authHeader)) {
+    activeToken = authHeader;
+    reply.status(401).send({
+      success: false,
+      error: 'Unauthorized. Missing or invalid Auth token.'
+    });
+  }
+});
+
 
 // Worker function to parse HTML and extract links
 async function extractLinks(html, baseUrl) {
@@ -83,6 +103,8 @@ app.setErrorHandler((error, request, reply) => {
 
 // Main route handler
 app.post('/scrape', {
+
+  
 
   schema: {
     body: {
@@ -151,7 +173,10 @@ app.post('/scrape', {
         socialLinks: extractedData.socialLinks,
         emailLinks: extractedData.emailLinks,
         phoneLinks: extractedData.phoneLinks,
-        technologies: extractedData.technologies
+        technologies: extractedData.technologies,
+        metaTitle: extractedData.metaTitle,
+        metaDescription: extractedData.metaDescription,
+        metaKeywords: extractedData.metaKeywords
       },
       error: null
     };
@@ -196,5 +221,12 @@ if (cluster.isPrimary) {
 
 
 function logger(message) {
-  console.log(`[${Date.now()}] ${message}`);
+
+  const activeSession = {
+    "4ihmWf1YOTQiuUWgkD1aaPCF9QOVJfcM" : "1",
+    "YXCXW85Hhk8Rx3VIGujakoWQ3jU3ciir" : "2",
+    "afLf5pdLaEMoy32OFztqsGP2G5he11c3" : "3"
+  }
+
+  console.log(`[${activeSession[activeToken]}] => [${Date.now()}] ${message}`);
 }

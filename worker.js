@@ -41,7 +41,7 @@ export default async function ({ html, baseUrl, headers, emailDomains }) {
     
     if (href.startsWith('mailto:')) {
       const email = href.replace('mailto:', '');
-      console.log(email);
+      // console.log(email);
       const emailDomain = getDomain(email);
       if (allowedDomains.has(emailDomain)) {
         acc.emailLinks.push(email);
